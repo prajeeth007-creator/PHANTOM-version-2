@@ -1,89 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>BMO Chatbot</title>
+    <meta charset="UTF-8">
+    <title>Cooper: Your Living Console</title>
     <style>
         :root { --bmo-teal: #4db6ac; --bmo-screen: #b6e3c4; }
-        body { background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Courier New', monospace; }
+        body { background: #121212; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Courier New', monospace; }
         
-        /* BMO Body */
         .bmo-body {
-            width: 320px; background: var(--bmo-teal); border-radius: 25px; padding: 25px;
-            box-shadow: inset -8px -8px 0px #388e85, 12px 12px 0px #000;
-            display: flex; flex-direction: column; gap: 15px; transition: 0.3s;
+            width: 340px; background: var(--bmo-teal); border-radius: 30px; padding: 30px;
+            box-shadow: inset -10px -10px 0px #347a73, 15px 15px 0px #000;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
-        .game-active { background: #e53935 !important; }
-        .game-active .screen { background: #ffcdd2 !important; border-color: #b71c1c; }
-
-        /* Face/Screen */
         .screen {
-            background: var(--bmo-screen); height: 180px; border-radius: 15px;
-            border: 8px solid #388e85; display: flex; flex-direction: column;
+            background: var(--bmo-screen); height: 190px; border-radius: 20px;
+            border: 10px solid #388e85; display: flex; flex-direction: column;
             justify-content: center; align-items: center; position: relative;
         }
 
-        .eyes { display: flex; gap: 70px; }
-        .eye { width: 16px; height: 16px; background: #000; border-radius: 50%; animation: blink 4s infinite; }
-        .mouth { width: 45px; height: 15px; border-bottom: 6px solid #000; border-radius: 0 0 50% 50%; margin-top: 15px; }
+        .eyes { display: flex; gap: 80px; }
+        .eye { width: 22px; height: 22px; background: #000; border-radius: 50%; animation: blink 4s infinite; }
+        .mouth { width: 55px; height: 12px; border-bottom: 6px solid #000; border-radius: 0 0 50% 50%; margin-top: 20px; transition: 0.1s; }
 
         @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
-        .talking .mouth { animation: speak 0.2s infinite alternate; background: #000; }
-        @keyframes speak { from { height: 5px; } to { height: 30px; } }
+        .talking .mouth { animation: speak 0.15s infinite alternate; background: #000; }
+        @keyframes speak { from { height: 5px; } to { height: 35px; } }
 
-        /* UI Elements */
-        #logs { background: rgba(0,0,0,0.05); height: 80px; padding: 10px; font-size: 13px; border-radius: 10px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.1); }
+        #logs { background: rgba(0,0,0,0.08); height: 100px; padding: 12px; font-size: 14px; border-radius: 12px; overflow-y: auto; border: 2px dashed rgba(0,0,0,0.1); }
         .controls { display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border-radius: 15px; border: none; outline: none; }
-        button { border: none; cursor: pointer; border-radius: 10px; font-weight: bold; }
-        .btn-game { background: #2196f3; color: white; padding: 8px; }
+        input { flex: 1; padding: 12px; border-radius: 20px; border: none; outline: none; }
+        .btn { border: none; cursor: pointer; border-radius: 20px; font-weight: bold; padding: 10px 15px; }
     </style>
 </head>
 <body>
 
-<div class="bmo-body" id="bmo">
+<div class="bmo-body" id="cooper">
     <div class="screen" id="face">
         <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
         <div class="mouth"></div>
     </div>
-    <div id="logs">BMO: Waiting for Finn...</div>
+    <div id="logs">Cooper: Prajee, is that you?</div>
     <div class="controls">
-        <input type="text" id="userInput" placeholder="Type..." onkeypress="if(event.key==='Enter') chat()">
-        <button onclick="startMic()">🎤</button>
-        <button onclick="chat()" style="background:#ffeb3b">GO</button>
+        <input type="text" id="userInput" placeholder="Talk to Cooper..." onkeypress="if(event.key==='Enter') chat()">
+        <button class="btn" onclick="startMic()">🎤</button>
+        <button class="btn" onclick="chat()" style="background:#ffeb3b">GO</button>
     </div>
-    <button class="btn-game" onclick="toggleGame()">VIDEO GAME MODE</button>
 </div>
 
 <script>
-    let isGame = false;
-
-    function toggleGame() {
-        isGame = !isGame;
-        document.getElementById('bmo').classList.toggle('game-active');
-        speak(isGame ? "Video game time!" : "Back to normal.");
-    }
+    let isWaitingForName = false;
 
     async function chat() {
         const input = document.getElementById('userInput');
-        const text = input.value;
+        const logs = document.getElementById('logs');
+        const text = input.value.trim();
         if(!text) return;
         input.value = "";
 
-        // Send to Flask
+        // 1. Logic for "Prajee is that you?"
+        if (logs.innerText.includes("is that you?")) {
+            if (text.toLowerCase() === "yes") {
+                const reply = "Yay! What's our new quest?";
+                updateUI("You: yes", reply);
+                speak(reply);
+                return;
+            } else if (text.toLowerCase() === "no") {
+                const reply = "Oh, nice meeting you! I was waiting for Prajee. What's your name?";
+                updateUI("You: no", reply);
+                speak(reply);
+                isWaitingForName = true;
+                return;
+            }
+        }
+
+        // 2. Logic for getting User's Name
+        if (isWaitingForName) {
+            const reply = `Hello ${text}! I am Cooper.`;
+            updateUI(`You: ${text}`, reply);
+            speak(reply);
+            isWaitingForName = false;
+            return;
+        }
+
+        // 3. Normal Chatbot Logic
         const response = await fetch(`/get?userMessage=${encodeURIComponent(text)}`);
         const bmoReply = await response.text();
-        
-        document.getElementById('logs').innerHTML = `<b>BMO:</b> ${bmoReply}`;
+        updateUI(`You: ${text}`, bmoReply);
         speak(bmoReply);
+    }
+
+    function updateUI(userMsg, botReply) {
+        const logs = document.getElementById('logs');
+        logs.innerHTML = `<div>${userMsg}</div><div><b>Cooper:</b> ${botReply}</div>`;
+        logs.scrollTop = logs.scrollHeight;
     }
 
     function speak(text) {
         const synth = window.speechSynthesis;
+        // Cancel any current speech to prevent overlap
+        synth.cancel();
+
         const utter = new SpeechSynthesisUtterance(text);
-        utter.pitch = isGame ? 2.0 : 1.5; // BMO Voice
+        
+        // This force-loads voices to fix the "voice didn't change" bug
+        const voices = synth.getVoices();
+        // Try to find a youthful/female voice for the childish tone
+        const childVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Zira'));
+        
+        if (childVoice) utter.voice = childVoice;
+
+        utter.pitch = 1.9; // Higher pitch for childish tone
+        utter.rate = 1.1;  // Slightly faster for energy
+        
         document.getElementById('face').classList.add('talking');
         utter.onend = () => document.getElementById('face').classList.remove('talking');
+        
         synth.speak(utter);
     }
 
@@ -93,6 +125,9 @@
         rec.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; chat(); };
         rec.start();
     }
+
+    // Ensure voices are ready
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 </script>
 </body>
 </html>
