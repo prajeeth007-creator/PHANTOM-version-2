@@ -6,11 +6,11 @@ app = Flask(__name__)
 
 # Initialize BMO
 bot = ChatBot(
-    "BMO",
+    "cooper",
     logic_adapters=[
         {
             "import_path": "chatterbot.logic.BestMatch",
-            "default_response": "BMO does not compute!",
+            "default_response": "cooper does not compute!",
             "maximum_similarity_threshold": 0.90
         }
     ]

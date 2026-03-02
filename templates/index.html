@@ -2,133 +2,244 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cooper: Your Living Console</title>
     <style>
-        :root { --bmo-teal: #4db6ac; --bmo-screen: #b6e3c4; }
-        body { background: #121212; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Courier New', monospace; }
-        
+        :root {
+            --cooper-teal: #4db6ac;
+            --cooper-screen: #b6e3c4;
+            --cooper-border: #388e85;
+        }
+
+        body { 
+            background: #1a1a1a; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* COOPER'S BODY */
         .bmo-body {
-            width: 340px; background: var(--bmo-teal); border-radius: 30px; padding: 30px;
+            width: 340px;
+            background: var(--cooper-teal);
+            border-radius: 35px;
+            padding: 30px;
             box-shadow: inset -10px -10px 0px #347a73, 15px 15px 0px #000;
-            display: flex; flex-direction: column; gap: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* FACE SCREEN */
         .screen {
-            background: var(--bmo-screen); height: 190px; border-radius: 20px;
-            border: 10px solid #388e85; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; position: relative;
+            background: var(--cooper-screen);
+            height: 190px;
+            border-radius: 20px;
+            border: 10px solid var(--cooper-border);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
         }
 
-        .eyes { display: flex; gap: 80px; }
-        .eye { width: 22px; height: 22px; background: #000; border-radius: 50%; animation: blink 4s infinite; }
-        .mouth { width: 55px; height: 12px; border-bottom: 6px solid #000; border-radius: 0 0 50% 50%; margin-top: 20px; transition: 0.1s; }
+        .eyes { display: flex; gap: 70px; }
+        .eye { 
+            width: 22px; height: 22px; 
+            background: #000; border-radius: 50%; 
+            animation: blink 4s infinite; 
+        }
 
+        .mouth { 
+            width: 55px; height: 12px; 
+            border-bottom: 6px solid #000; 
+            border-radius: 0 0 50% 50%; 
+            margin-top: 18px; 
+            transition: 0.1s; 
+        }
+
+        /* ANIMATIONS */
         @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
-        .talking .mouth { animation: speak 0.15s infinite alternate; background: #000; }
-        @keyframes speak { from { height: 5px; } to { height: 35px; } }
+        
+        /* Talking State */
+        .talking .mouth { animation: speak 0.15s infinite alternate; background: #000; border-radius: 50%; }
+        @keyframes speak { from { height: 5px; } to { height: 32px; } }
+        .talking .screen { box-shadow: 0 0 15px rgba(182, 227, 196, 0.7); }
 
-        #logs { background: rgba(0,0,0,0.08); height: 100px; padding: 12px; font-size: 14px; border-radius: 12px; overflow-y: auto; border: 2px dashed rgba(0,0,0,0.1); }
+        /* Thinking State */
+        .thinking .eye { animation: wiggle 0.2s infinite; }
+        @keyframes wiggle { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+
+        /* Dance/Excited State */
+        @keyframes hop {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        .dancing { animation: hop 0.4s ease-in-out; }
+
+        /* CHAT LOGS */
+        #logs { 
+            background: rgba(0,0,0,0.08); 
+            height: 90px; 
+            padding: 12px; 
+            font-size: 14px; 
+            border-radius: 12px; 
+            overflow-y: auto; 
+            border: 2px dashed rgba(0,0,0,0.1);
+            color: #1a4d31;
+            scroll-behavior: smooth;
+        }
+
+        /* INPUTS */
         .controls { display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border-radius: 20px; border: none; outline: none; }
-        .btn { border: none; cursor: pointer; border-radius: 20px; font-weight: bold; padding: 10px 15px; }
+        input { 
+            flex: 1; padding: 12px; border-radius: 20px; 
+            border: none; outline: none; font-size: 14px;
+        }
+        .btn { 
+            border: none; cursor: pointer; border-radius: 50%; 
+            width: 45px; height: 45px; display: flex; 
+            align-items: center; justify-content: center;
+            font-size: 18px; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.9); }
+        .btn-go { background: #ffeb3b; border-radius: 20px; width: 60px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="bmo-body" id="cooper">
+<div class="bmo-body" id="cooperBody">
     <div class="screen" id="face">
         <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
         <div class="mouth"></div>
     </div>
+
     <div id="logs">Cooper: Prajee, is that you?</div>
+
     <div class="controls">
-        <input type="text" id="userInput" placeholder="Talk to Cooper..." onkeypress="if(event.key==='Enter') chat()">
-        <button class="btn" onclick="startMic()">🎤</button>
-        <button class="btn" onclick="chat()" style="background:#ffeb3b">GO</button>
+        <input type="text" id="userInput" placeholder="Type here..." onkeypress="if(event.key==='Enter') chat()">
+        <button class="btn" style="background: #ff5252; color: white;" onclick="startMic()">🎤</button>
+        <button class="btn btn-go" onclick="chat()">GO</button>
     </div>
 </div>
 
 <script>
-    let isWaitingForName = false;
+    let state = "ASK_PRAJEE"; // State machine for the conversation
 
     async function chat() {
         const input = document.getElementById('userInput');
         const logs = document.getElementById('logs');
+        const face = document.getElementById('face');
+        const body = document.getElementById('cooperBody');
         const text = input.value.trim();
+
         if(!text) return;
         input.value = "";
 
-        // 1. Logic for "Prajee is that you?"
-        if (logs.innerText.includes("is that you?")) {
-            if (text.toLowerCase() === "yes") {
+        // 1. PRAJEE LOGIC
+        if (state === "ASK_PRAJEE") {
+            if (text.toLowerCase().includes("yes")) {
                 const reply = "Yay! What's our new quest?";
-                updateUI("You: yes", reply);
+                updateUI(text, reply);
+                triggerDance();
                 speak(reply);
+                state = "NORMAL";
                 return;
-            } else if (text.toLowerCase() === "no") {
+            } else if (text.toLowerCase().includes("no")) {
                 const reply = "Oh, nice meeting you! I was waiting for Prajee. What's your name?";
-                updateUI("You: no", reply);
+                updateUI(text, reply);
                 speak(reply);
-                isWaitingForName = true;
+                state = "GET_NAME";
                 return;
             }
         }
 
-        // 2. Logic for getting User's Name
-        if (isWaitingForName) {
-            const reply = `Hello ${text}! I am Cooper.`;
-            updateUI(`You: ${text}`, reply);
+        // 2. NAME LOGIC
+        if (state === "GET_NAME") {
+            const reply = `Nice to meet you, ${text}! I am Cooper. How can I help you?`;
+            updateUI(text, reply);
             speak(reply);
-            isWaitingForName = false;
+            state = "NORMAL";
             return;
         }
 
-        // 3. Normal Chatbot Logic
-        const response = await fetch(`/get?userMessage=${encodeURIComponent(text)}`);
-        const bmoReply = await response.text();
-        updateUI(`You: ${text}`, bmoReply);
-        speak(bmoReply);
+        // 3. BACKEND COMMUNICATION
+        logs.innerHTML += `<div><b>You:</b> ${text}</div>`;
+        logs.scrollTop = logs.scrollHeight;
+        face.classList.add('thinking');
+
+        try {
+            const response = await fetch(`/get?userMessage=${encodeURIComponent(text)}`);
+            const reply = await response.text();
+            
+            face.classList.remove('thinking');
+            updateUI(null, reply);
+            
+            // Trigger dance for happy words
+            if(reply.toLowerCase().includes("yay") || reply.toLowerCase().includes("quest")) triggerDance();
+            
+            speak(reply);
+        } catch (e) {
+            face.classList.remove('thinking');
+            updateUI(null, "Cooper has a brain freeze! Try again?");
+        }
     }
 
     function updateUI(userMsg, botReply) {
         const logs = document.getElementById('logs');
-        logs.innerHTML = `<div>${userMsg}</div><div><b>Cooper:</b> ${botReply}</div>`;
+        if(userMsg) logs.innerHTML += `<div><b>You:</b> ${userMsg}</div>`;
+        logs.innerHTML += `<div><b>Cooper:</b> ${botReply}</div>`;
         logs.scrollTop = logs.scrollHeight;
+    }
+
+    function triggerDance() {
+        const body = document.getElementById('cooperBody');
+        body.classList.add('dancing');
+        setTimeout(() => body.classList.remove('dancing'), 500);
     }
 
     function speak(text) {
         const synth = window.speechSynthesis;
-        // Cancel any current speech to prevent overlap
-        synth.cancel();
+        synth.cancel(); // Stop current speech to avoid overlap
 
         const utter = new SpeechSynthesisUtterance(text);
-        
-        // This force-loads voices to fix the "voice didn't change" bug
         const voices = synth.getVoices();
-        // Try to find a youthful/female voice for the childish tone
-        const childVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Zira'));
         
-        if (childVoice) utter.voice = childVoice;
+        // Find the best childish/high-pitched voice
+        const bmoVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Zira'));
+        if (bmoVoice) utter.voice = bmoVoice;
 
-        utter.pitch = 1.9; // Higher pitch for childish tone
-        utter.rate = 1.1;  // Slightly faster for energy
-        
-        document.getElementById('face').classList.add('talking');
-        utter.onend = () => document.getElementById('face').classList.remove('talking');
+        utter.pitch = 2.0; // Childish pitch
+        utter.rate = 1.1;  // Energetic speed
+
+        const face = document.getElementById('face');
+        face.classList.add('talking');
+        utter.onend = () => face.classList.remove('talking');
         
         synth.speak(utter);
     }
 
     function startMic() {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!Speech) return alert("Mic not supported!");
         const rec = new Speech();
-        rec.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; chat(); };
+        rec.onresult = (e) => { 
+            document.getElementById('userInput').value = e.results[0][0].transcript; 
+            chat(); 
+        };
         rec.start();
     }
 
-    // Ensure voices are ready
+    // Force load voices
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 </script>
+
 </body>
 </html>
 
