@@ -1,185 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Chat UI</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    <title>BMO Chatbot</title>
     <style>
-        :root{
-            --green:#3cff00;
-            --black:#0b0b0b;
-            --dark:#111;
+        :root { --bmo-teal: #4db6ac; --bmo-screen: #b6e3c4; }
+        body { background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Courier New', monospace; }
+        
+        /* BMO Body */
+        .bmo-body {
+            width: 320px; background: var(--bmo-teal); border-radius: 25px; padding: 25px;
+            box-shadow: inset -8px -8px 0px #388e85, 12px 12px 0px #000;
+            display: flex; flex-direction: column; gap: 15px; transition: 0.3s;
         }
 
-        *{
-            box-sizing:border-box;
-            margin:0;
-            padding:0;
-            font-family:'Montserrat', sans-serif;
+        .game-active { background: #e53935 !important; }
+        .game-active .screen { background: #ffcdd2 !important; border-color: #b71c1c; }
+
+        /* Face/Screen */
+        .screen {
+            background: var(--bmo-screen); height: 180px; border-radius: 15px;
+            border: 8px solid #388e85; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; position: relative;
         }
 
-        body{
-            height:100vh;
-            background:var(--black);
-            display:flex;
-            justify-content:center;
-            align-items:center;
-        }
+        .eyes { display: flex; gap: 70px; }
+        .eye { width: 16px; height: 16px; background: #000; border-radius: 50%; animation: blink 4s infinite; }
+        .mouth { width: 45px; height: 15px; border-bottom: 6px solid #000; border-radius: 0 0 50% 50%; margin-top: 15px; }
 
-        .chat-container{
-            width:420px;
-            height:600px;
-            background:var(--dark);
-            border-radius:16px;
-            display:flex;
-            flex-direction:column;
-            box-shadow:0 0 30px rgba(0,255,0,0.08);
-        }
+        @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+        .talking .mouth { animation: speak 0.2s infinite alternate; background: #000; }
+        @keyframes speak { from { height: 5px; } to { height: 30px; } }
 
-        .chat-header{
-            padding:15px;
-            text-align:center;
-            color:var(--green);
-            border-bottom:1px solid rgba(60,255,0,0.2);
-            font-weight:600;
-            letter-spacing:1px;
-        }
-
-        .chat-box{
-            flex:1;
-            padding:15px;
-            overflow-y:auto;
-        }
-
-        .botText, .userText{
-            margin-bottom:12px;
-            line-height:1.4;
-        }
-
-        /* ✅ FIXED TEXT COLOR */
-        .botText span{
-            background:#1a1a1a;
-            color:#ffffff;
-            padding:10px 14px;
-            border-radius:12px 12px 12px 0;
-            display:inline-block;
-            max-width:80%;
-        }
-
-        .userText{
-            text-align:right;
-        }
-
-        .userText span{
-            background:#202020;
-            color:#ffffff;
-            padding:10px 14px;
-            border-radius:12px 12px 0 12px;
-            display:inline-block;
-            max-width:80%;
-        }
-
-        .input-area{
-            padding:14px;
-            border-top:1px solid rgba(60,255,0,0.2);
-            position:relative;
-        }
-
-        .input-area::before,
-        .input-area::after{
-            content:'';
-            position:absolute;
-            width:40px;
-            height:2px;
-            background:var(--green);
-        }
-
-        .input-area::before{
-            top:6px;
-            left:6px;
-        }
-
-        .input-area::after{
-            bottom:6px;
-            right:6px;
-        }
-
-        #textInput{
-            width:100%;
-            padding:12px;
-            background:transparent;
-            border:1px solid rgba(60,255,0,0.4);
-            border-radius:10px;
-            color:white;
-            outline:none;
-        }
-
-        #buttonInput{
-            margin-top:10px;
-            width:100%;
-            padding:10px;
-            background:transparent;
-            border:1px solid var(--green);
-            color:var(--green);
-            border-radius:10px;
-            cursor:pointer;
-            font-weight:600;
-        }
-
-        #buttonInput:hover{
-            background:rgba(60,255,0,0.08);
-        }
+        /* UI Elements */
+        #logs { background: rgba(0,0,0,0.05); height: 80px; padding: 10px; font-size: 13px; border-radius: 10px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.1); }
+        .controls { display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border-radius: 15px; border: none; outline: none; }
+        button { border: none; cursor: pointer; border-radius: 10px; font-weight: bold; }
+        .btn-game { background: #2196f3; color: white; padding: 8px; }
     </style>
 </head>
-
 <body>
 
-<div class="chat-container">
-    <div class="chat-header">J.A.R.V.I.S</div>
-
-    <div class="chat-box" id="chatbox">
-        <p class="botText"><span>System online.</span></p>
+<div class="bmo-body" id="bmo">
+    <div class="screen" id="face">
+        <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+        <div class="mouth"></div>
     </div>
-
-    <div class="input-area">
-        <input type="text" id="textInput" placeholder="Type your message...">
-        <button id="buttonInput">Send</button>
+    <div id="logs">BMO: Waiting for Finn...</div>
+    <div class="controls">
+        <input type="text" id="userInput" placeholder="Type..." onkeypress="if(event.key==='Enter') chat()">
+        <button onclick="startMic()">🎤</button>
+        <button onclick="chat()" style="background:#ffeb3b">GO</button>
     </div>
+    <button class="btn-game" onclick="toggleGame()">VIDEO GAME MODE</button>
 </div>
 
 <script>
-    function getUserResponse(){
-        let userText = $("#textInput").val();
-        if(userText === "") return;
+    let isGame = false;
 
-        let userHtml = '<p class="userText"><span>' + userText + '</span></p>';
-        $("#chatbox").append(userHtml);
-        $("#textInput").val("");
-
-        $.get("/get", { userMessage: userText }).done(function(data){
-            let botHtml = '<p class="botText"><span>' + data + '</span></p>';
-            $("#chatbox").append(botHtml);
-            $("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
-        });
+    function toggleGame() {
+        isGame = !isGame;
+        document.getElementById('bmo').classList.toggle('game-active');
+        speak(isGame ? "Video game time!" : "Back to normal.");
     }
 
-    $("#buttonInput").click(function(){
-        getUserResponse();
-    });
+    async function chat() {
+        const input = document.getElementById('userInput');
+        const text = input.value;
+        if(!text) return;
+        input.value = "";
 
-    $("#textInput").keypress(function(e){
-        if(e.which === 13){
-            getUserResponse();
-        }
-    });
+        // Send to Flask
+        const response = await fetch(`/get?userMessage=${encodeURIComponent(text)}`);
+        const bmoReply = await response.text();
+        
+        document.getElementById('logs').innerHTML = `<b>BMO:</b> ${bmoReply}`;
+        speak(bmoReply);
+    }
+
+    function speak(text) {
+        const synth = window.speechSynthesis;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.pitch = isGame ? 2.0 : 1.5; // BMO Voice
+        document.getElementById('face').classList.add('talking');
+        utter.onend = () => document.getElementById('face').classList.remove('talking');
+        synth.speak(utter);
+    }
+
+    function startMic() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = new Speech();
+        rec.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; chat(); };
+        rec.start();
+    }
 </script>
-
 </body>
 </html>
-
-
 
 

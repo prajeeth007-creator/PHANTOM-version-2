@@ -1,16 +1,16 @@
 from chatterbot import ChatBot
-from chatterbot.trainers import ListTrainer, ChatterBotCorpusTrainer
+from chatterbot.trainers import ChatterBotCorpusTrainer
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+# Initialize BMO
 bot = ChatBot(
-    "HARSH",
-    read_only=False,
+    "BMO",
     logic_adapters=[
         {
             "import_path": "chatterbot.logic.BestMatch",
-            "default_response": "I am sorry, I don't have an answer for that.",
+            "default_response": "BMO does not compute!",
             "maximum_similarity_threshold": 0.90
         }
     ]
@@ -24,12 +24,12 @@ def home():
     return render_template("index.html")
 
 @app.route("/get")
-def get_chatbot_response():
-    userText = request.args.get('userMessage')
-    return str(bot.get_response(userText))
-
-
-
+def get_response():
+    # This 'userMessage' must match the JS fetch URL
+    user_text = request.args.get("userMessage") 
+    if user_text:
+        return str(bot.get_response(user_text))
+    return "I didn't hear you!"
 
 if __name__ == "__main__":
     app.run(debug=True)
