@@ -13,4 +13,5 @@ def get_bot_response():
     return get_response(user_text)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Replit requires host 0.0.0.0 and port 5000
+    app.run(host="0.0.0.0", port=5000, debug=True)
