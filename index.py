@@ -1,6 +1,7 @@
 from music_player import play_song, stop_song, pause_song
 
 def get_response(user_input):
+    # 🛑 Handle empty input
     if not user_input:
         return "I didn't catch that."
 
@@ -8,36 +9,43 @@ def get_response(user_input):
 
     try:
         # 🎵 -------- MUSIC CONTROLS --------
+
+        # ▶️ Play Song
         if "play" in command:
-            song = command.replace("play", "").replace("song", "").strip()
+            # Extract song name properly
+            song = command.split("play", 1)[-1]
+            song = song.replace("song", "").strip()
 
             if song:
                 play_song(song)
                 return f"Playing {song} 🎧"
             else:
-                return "Which song should I play?"
+                return "Tell me the song name to play."
 
+        # ⏸️ Pause
         elif "pause" in command:
             pause_song()
             return "Music paused ⏸️"
 
+        # ⏹️ Stop
         elif "stop" in command:
             stop_song()
             return "Music stopped ⏹️"
 
-        # 🧠 -------- EXISTING LOGIC (KEEP YOUR OLD RESPONSES HERE) --------
-        # Example:
-        elif "hello" in command:
+        # 🧠 -------- BASIC RESPONSES --------
+
+        elif command in ["hi", "hello"]:
             return "Hey! I'm Cooper 😎"
 
         elif "how are you" in command:
             return "I'm running perfectly. What about you?"
 
-        # 👉 IMPORTANT: Keep your previous conditions below this line
-        # (paste your old code here if you had more responses)
+        elif "who are you" in command:
+            return "I'm Cooper, your personal AI assistant 🤖"
 
+        # ❓ Unknown
         else:
-            return "I didn't understand that."
+            return "I didn't understand that. Try saying play, pause, or stop."
 
     except Exception as e:
         print("Error:", e)
